@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as tf from '@tensorflow/tfjs'
+import { createModel } from '../utils/utils'
 
 const plateGeometry = new THREE.BoxGeometry(3, 0.1, 3)
 const plateMaterial = new THREE.MeshStandardMaterial({ color: 'blue' })
@@ -19,7 +20,7 @@ export default function Cart({ position }: CartProps) {
     const [ballPosition, setBallPosition] = useState([0, 2, 0]);
     const ballRef = useRef<RapierRigidBody>(null)
     const { rapier, world } = useRapier()
-    const [model, setModel] = useState(null)
+    const [model, setModel] = useState(createModel())
 
     function reset(){
         if(ballRef.current){
@@ -28,7 +29,6 @@ export default function Cart({ position }: CartProps) {
             ballRef.current.setAngvel({ x: 0, y: 0, z: 0 },true)
         }
     }
-
 
     useFrame((state,delta) => {
         const ball = ballRef.current
@@ -55,10 +55,10 @@ export default function Cart({ position }: CartProps) {
 
     return (
         <>
-            <RigidBody ref={plateRef} type="fixed" colliders="cuboid" >
-                <mesh geometry={plateGeometry} material={plateMaterial} />
+            <RigidBody ref={plateRef} type="fixed" colliders="cuboid" scale={[0.8,0.8,0.4]} >
+                <mesh geometry={plateGeometry} material={plateMaterial} scale={[0.8,0.8,0.4]} />
             </RigidBody>
-            <RigidBody ref={ballRef} colliders="ball" type="dynamic" position={[0, 2, 0]}>
+            <RigidBody ref={ballRef} colliders="ball" type="dynamic" position={position}>
                 <mesh geometry={sphereGeometry} material={sphereMaterial} />
             </RigidBody>
         </>
