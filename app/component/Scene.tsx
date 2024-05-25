@@ -13,6 +13,7 @@ interface SceneProps {
 }
 
 export default function Scene({ position, scale, receiveShadow,castShadow }: SceneProps){
+    
     return(
         <RigidBody type="fixed" position={position} scale={scale}>
             <mesh
