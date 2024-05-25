@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as tf from '@tensorflow/tfjs'
-import { createModel } from '../utils/utils'
+import { createModel, trainModel } from '../utils/utils'
 
 const plateGeometry = new THREE.BoxGeometry(3, 0.1, 3)
 const plateMaterial = new THREE.MeshStandardMaterial({ color: 'blue' })
@@ -20,7 +20,7 @@ export default function Cart({ position }: CartProps) {
     const [ballPosition, setBallPosition] = useState([0, 2, 0]);
     const ballRef = useRef<RapierRigidBody>(null)
     const { rapier, world } = useRapier()
-    const [model, setModel] = useState(createModel())
+    const [model, _setModel ] = useState(createModel())
 
     function reset(){
         if(ballRef.current){
@@ -30,18 +30,27 @@ export default function Cart({ position }: CartProps) {
         }
     }
 
-    useFrame((state,delta) => {
+    function step(){
+        const xs = tf.tensor2d([[ballPosition[0], ballPosition[1], ballPosition[2]]]) // Inclure les positions x, y et z
+        const ys = tf.tensor2d([[1]])
+        trainModel(model, xs, ys)
+    }
+
+    useFrame((state, delta) => {
         const ball = ballRef.current
-        if(ball){
+        const plate = plateRef.current
+        if (ball) {
             setBallPosition([ball.translation().x, ball.translation().y, ball.translation().z])
         }
         if (state.clock.elapsedTime % 2 < delta) {
-            if(ball) {
-                const x = Math.random() * 2 - 1
-                const impulse = new rapier.Vector3(x,0, 0)
-                ball.applyImpulse(impulse, true)
+            if (ball && plate) {
+                const xs = tf.tensor2d([[ballPosition[0], ballPosition[2]]])
+                const prediction = tf.tidy(() => model.predict(xs) as tf.Tensor1D).arraySync()[0]
+                const impulse = new rapier.Vector3(prediction, 0, 0)
+                plate.applyImpulse(impulse, true)
             }
         }
+
     });
 
     useEffect(() => {
@@ -62,5 +71,5 @@ export default function Cart({ position }: CartProps) {
                 <mesh geometry={sphereGeometry} material={sphereMaterial} />
             </RigidBody>
         </>
-    );
+    )
 }
