@@ -12,7 +12,7 @@ export default function Experience(){
         >
                 <OrbitControls makeDefault />
                 <Light />
-                <Physics debug>
+                <Physics >
                 <Cart position={[0, 0, 0]} />
                 </Physics>
         </Canvas>
